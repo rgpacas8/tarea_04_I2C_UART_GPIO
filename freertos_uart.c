@@ -43,6 +43,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "rtos_uart.h"
+#include "rtos_I2C.h"
 
 /* TODO: insert other definitions and declarations here. */
 void uart_echo_task(void * args)
@@ -62,7 +63,9 @@ void uart_echo_task(void * args)
 		rtos_uart_send(rtos_uart0, &data, 1);
 	}
 }
-
+void I2C_echo_task(void * args)
+{
+}
 /*
  * @brief   Application entry point.
  */
@@ -78,6 +81,7 @@ int main(void) {
     PRINTF("Hello World\n");
 
     xTaskCreate(uart_echo_task, "uart_echo_task", 110, NULL, 1, NULL);
+    xTaskCreate(uart_echo_task, "I2C_echo_task" , 110, NULL, 2, NULL);
     vTaskStartScheduler();
 
     /* Force the counter to be placed into memory. */
