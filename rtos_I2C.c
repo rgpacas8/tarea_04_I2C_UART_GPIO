@@ -14,15 +14,32 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
-//#define BAUD_RATE (9600U)
-//static rtos_I2C_handle_t uart_handles[NUMBER_OF_I2C_PORTS] = {0};
-//
-//rtos_I2C_flag_t rtos_i2c_init(rtos_I2C_config_t config)
-//{
-//	rtos_I2C_flag_t retval = I2C_uart_fail;
-//	i2c_master_config_t config;
-//	if (config.I2c_number < NUMBER_OF_I2C_PORTS) {
-//
-//	}
-//}
+				// se usa master_handle_t o slave_handle_t ?
+static void fsl_i2c_callback(I2C_Type *base, i2c_master_handle_t *handle, status_t status, void *userData);
+static inline void enable_port_clock(rtos_I2C_port_t port);
+static inline I2C_Type * get_i2c_base(rtos_I2C_channel_t I2C_channel);
+static inline PORT_Type* get_port_base(rtos_I2C_port_t port);
+
+typedef struct
+{
+	uint8_t is_init;
+	i2c_master_handle_t fsl_I2C_handle;
+	SemaphoreHandle_t mutex_I2c;
+	SemaphoreHandle_t I2C_sem;
+} rtos_I2C_handle_t;
+
+static rtos_I2C_handle_t I2C_handles[NUMBER_OF_I2C_CHANNELS] = { 0 };
+
+
+
+
+
+
+
+
+
+
+
+
+
 

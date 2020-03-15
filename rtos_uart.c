@@ -15,9 +15,9 @@
 #include "semphr.h"
 
 static void fsl_uart_callback(UART_Type *base, uart_handle_t *handle, status_t status, void *userData);
-static inline void enable_port_clock(rtos_uart_port_t);
-static inline UART_Type* get_uart_base(rtos_uart_number_t);
-static inline PORT_Type* get_port_base(rtos_uart_port_t);
+static inline void enable_port_clock(rtos_uart_port_t port);
+static inline UART_Type* get_uart_base(rtos_uart_number_t uart_number);
+static inline PORT_Type* get_port_base(rtos_uart_port_t port);
 
 typedef struct
 {
