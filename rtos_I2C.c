@@ -113,7 +113,26 @@ rtos_I2C_flag_t rtos_I2C_init(rtos_I2C_config_t config)
 	}
 	return retval;
 }
+rtos_I2C_flag_t rtos_I2C_write_byte(rtos_I2C_channel_t I2C_number, uint8_t *buffer,
+		uint16_t lenght, uint8_t slaveAddress) {
+	rtos_I2C_flag_t flag = rtos_I2C_fail;
+	i2c_master_transfer_t xfer;
+	if (I2C_handles[I2C_number].is_init) {
+		xfer.data = buffer;
+		xfer.dataSize = lenght;
+		xfer.direction = kI2C_Write; //modo escritura
+		xfer.slaveAddress = slaveAddress; //direccion del dispositivo esclavo
 
+		xSemaphoreTake(I2C_handles[I2C_number].mutex_I2C, portMAX_DELAY);
+		I2C_MasterTransferNonBlocking(get_I2C_base(I2C_number),
+				&I2C_handles[I2C_number].fsl_I2C_handle, &xfer);
+
+		xSemaphoreTake(I2C_handles[I2C_number].I2C_sem, portMAX_DELAY);
+		xSemaphoreGive(I2C_handles[I2C_number].mutex_I2C);
+		flag = rtos_I2C_sucess;
+	}
+	return flag;
+}
 
 
 

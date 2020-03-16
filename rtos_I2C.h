@@ -39,8 +39,8 @@ typedef struct
 
 /* It is recommended to use pin 2 and 3 of GPIOB. */
 rtos_I2C_flag_t rtos_I2C_init(rtos_I2C_config_t config);
-void rtos_I2C_write_byte(rtos_I2C_channel_t i2c_number, uint8_t *buffer, uint16_t lenght,
-		uint8_t slaveAddress, uint8_t subaddressSize);
+rtos_I2C_flag_t rtos_I2C_write_byte(rtos_I2C_channel_t I2C_number, uint8_t *buffer, uint16_t lenght,
+		uint8_t slaveAddress);
 uint8_t rtos_I2C_read_byte(void);
 
 #endif /* RTOS_I2C_H_ */
