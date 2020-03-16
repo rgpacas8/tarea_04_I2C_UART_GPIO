@@ -32,10 +32,9 @@
 
 /* TODO: insert the prototypes of functions here. */
 void uart_echo_task(void *args);
-//void I2C_echo_task(void *args);
+void I2C_write_task(void *args);
 
 int main(void) {
-
 	/* Init board hardware. */
 	BOARD_InitBootPins();
 	BOARD_InitBootClocks();
@@ -55,11 +54,11 @@ int main(void) {
 	 * 		- We are not using the task handle.
 	 * 		*/
 
-	xTaskCreate(uart_echo_task, "uart_echo_task", 110, NULL,
-			configMAX_PRIORITIES, NULL);
+//	xTaskCreate(uart_echo_task, "uart_echo_task", 110, NULL,	// ok!
+//			configMAX_PRIORITIES, NULL);						// ok!
 
-//	xTaskCreate(uart_echo_task, "I2C_echo_task",  110, NULL,
-//			configMAX_PRIORITIES, NULL);
+	xTaskCreate(I2C_write_task, "I2C_write_task",  110, NULL,
+			configMAX_PRIORITIES, NULL);
 
 	vTaskStartScheduler();
 
@@ -90,5 +89,29 @@ void uart_echo_task(void *args)
 	for (;;) {
 		rtos_uart_receive(rtos_uart0, &data, 1);
 		rtos_uart_send(rtos_uart0, &data, 1);
+	}
+}
+
+void I2C_write_task(void *args)
+{
+	rtos_I2C_config_t config;
+//	config.baud_rate = 100000; /* Standard mode: 100k bit/s */
+	config.scl_pin = 2; /* PTB2 - SCL */
+	config.sda_pin = 3; /* PTB3 - SDA */
+	config.pin_mux = kPORT_MuxAlt2; /* ALT2 Consult Pinout K66F y Signal Multiplexing */
+	config.I2C_number = rtos_I2C0;	/* I2C0 */
+	config.port = rtos_i2c_portB;	/* PTB	*/
+
+	config.master_or_slave = rtos_Master_mode; /* Doesn't use */
+	config.mode = rtos_I2C_WRITE_mode;  	   /* Doesn't use */
+
+	rtos_I2C_init(config);
+	uint8_t dataToWrite   = 0x0A;	/* Random value */
+	uint8_t slaveAddress  = 0x50;	/* 1010 + 000 = 101 0000 */
+	uint16_t writeAddress = 0x0000;	/* Memory location to write */
+
+	for (;;) {
+		rtos_I2C_write_byte(rtos_I2C0, &dataToWrite, 1, slaveAddress,
+				writeAddress, 2);
 	}
 }

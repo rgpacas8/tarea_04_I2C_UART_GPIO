@@ -36,19 +36,19 @@ static void fsl_I2C_callback(I2C_Type *base, i2c_master_handle_t *handle, status
 
 	if (kStatus_I2C_Idle == status) {
 		if (I2C0 == base) {
-			xSemaphoreGiveFromISR(I2C_handles[rtos_I2C_0].I2C_sem,
+			xSemaphoreGiveFromISR(I2C_handles[rtos_I2C0].I2C_sem,
 					&xHigherPriorityTaskWoken);
 		}
 		if (I2C1 == base) {
-			xSemaphoreGiveFromISR(I2C_handles[rtos_I2C_1].I2C_sem,
+			xSemaphoreGiveFromISR(I2C_handles[rtos_I2C1].I2C_sem,
 					&xHigherPriorityTaskWoken);
 		}
 		if (I2C2 == base) {
-			xSemaphoreGiveFromISR(I2C_handles[rtos_I2C_2].I2C_sem,
+			xSemaphoreGiveFromISR(I2C_handles[rtos_I2C2].I2C_sem,
 					&xHigherPriorityTaskWoken);
 		}
 		if (I2C3 == base) {
-			xSemaphoreGiveFromISR(I2C_handles[rtos_I2C_3].I2C_sem,
+			xSemaphoreGiveFromISR(I2C_handles[rtos_I2C3].I2C_sem,
 					&xHigherPriorityTaskWoken);
 		}
 	} // end if
@@ -76,29 +76,29 @@ rtos_I2C_flag_t rtos_I2C_init(rtos_I2C_config_t config)
 					config.pin_mux);
 
 			I2C_MasterGetDefaultConfig(&fsl_config);
-			fsl_config.baudRate_Bps = config.baud_rate; /* BaudRate */
+			//fsl_config.baudRate_Bps = config.baud_rate; /* BaudRate */
 			fsl_config.enableMaster = true; /* Enable Master */
 
-			if (rtos_I2C_0 == config.I2C_number) {
-				I2C_MasterInit(get_I2C_base(rtos_I2C_0), &fsl_config,
+			if (rtos_I2C0 == config.I2C_number) {
+				I2C_MasterInit(get_I2C_base(rtos_I2C0), &fsl_config,
 						CLOCK_GetFreq(I2C0_CLK_SRC));
 				NVIC_SetPriority(I2C0_IRQn, 5);
 			}
 
-			if (rtos_I2C_1 == config.I2C_number) {
-				I2C_MasterInit(get_I2C_base(rtos_I2C_1), &fsl_config,
+			if (rtos_I2C1 == config.I2C_number) {
+				I2C_MasterInit(get_I2C_base(rtos_I2C1), &fsl_config,
 						CLOCK_GetFreq(I2C1_CLK_SRC));
 				NVIC_SetPriority(I2C1_IRQn, 5);
 			}
 
-			if (rtos_I2C_2 == config.I2C_number) {
-				I2C_MasterInit(get_I2C_base(rtos_I2C_2), &fsl_config,
+			if (rtos_I2C2 == config.I2C_number) {
+				I2C_MasterInit(get_I2C_base(rtos_I2C2), &fsl_config,
 						CLOCK_GetFreq(I2C2_CLK_SRC));
 				NVIC_SetPriority(I2C2_IRQn, 5);
 			}
 
-			if (rtos_I2C_3 == config.I2C_number) {
-				I2C_MasterInit(get_I2C_base(rtos_I2C_3), &fsl_config,
+			if (rtos_I2C3 == config.I2C_number) {
+				I2C_MasterInit(get_I2C_base(rtos_I2C3), &fsl_config,
 						CLOCK_GetFreq(I2C3_CLK_SRC));
 				NVIC_SetPriority(I2C3_IRQn, 5);
 			}
@@ -113,15 +113,21 @@ rtos_I2C_flag_t rtos_I2C_init(rtos_I2C_config_t config)
 	}
 	return retval;
 }
-rtos_I2C_flag_t rtos_I2C_write_byte(rtos_I2C_channel_t I2C_number, uint8_t *buffer,
-		uint16_t lenght, uint8_t slaveAddress) {
+
+rtos_I2C_flag_t rtos_I2C_write_byte(rtos_I2C_channel_t I2C_number,
+		uint8_t *buffer, uint16_t lenght, uint8_t slaveAddress,
+		uint16_t writeAddress, uint16_t subSize)
+{
 	rtos_I2C_flag_t flag = rtos_I2C_fail;
 	i2c_master_transfer_t xfer;
 	if (I2C_handles[I2C_number].is_init) {
 		xfer.data = buffer;
 		xfer.dataSize = lenght;
-		xfer.direction = kI2C_Write; //modo escritura
-		xfer.slaveAddress = slaveAddress; //direccion del dispositivo esclavo
+
+		xfer.direction = kI2C_Write; // modo escritura
+		xfer.slaveAddress = slaveAddress; // direccion del dispositivo esclavo
+		xfer.subaddress = writeAddress; // localidad de memoria a escribir
+		xfer.subaddressSize = subSize; // 1 byte Hight + 1 byte Low
 
 		xSemaphoreTake(I2C_handles[I2C_number].mutex_I2C, portMAX_DELAY);
 		I2C_MasterTransferNonBlocking(get_I2C_base(I2C_number),
@@ -133,6 +139,7 @@ rtos_I2C_flag_t rtos_I2C_write_byte(rtos_I2C_channel_t I2C_number, uint8_t *buff
 	}
 	return flag;
 }
+
 uint8_t I2C_read_byte(rtos_I2C_channel_t I2C_number, uint8_t *buffer,uint16_t lenght, uint8_t slaveAddress) {
 	//rtos_I2C_flag_t flag = rtos_I2C_fail;
 	uint8_t read_byte = 0;
@@ -147,6 +154,7 @@ uint8_t I2C_read_byte(rtos_I2C_channel_t I2C_number, uint8_t *buffer,uint16_t le
 		xSemaphoreTake(I2C_handles[I2C_number].mutex_I2C, portMAX_DELAY);
 		I2C_MasterTransferNonBlocking(get_I2C_base(I2C_number),
 				&I2C_handles[I2C_number].fsl_I2C_handle, &xfer);
+
 		xSemaphoreTake(I2C_handles[I2C_number].I2C_sem, portMAX_DELAY);
 		xSemaphoreGive(I2C_handles[I2C_number].mutex_I2C);
 		//flag = rtos_I2C_sucess;
@@ -154,6 +162,7 @@ uint8_t I2C_read_byte(rtos_I2C_channel_t I2C_number, uint8_t *buffer,uint16_t le
 	}
 	return (read_byte);
 }
+
 static inline void enable_port_clock(rtos_I2C_port_t port)
 {
 	switch (port)
@@ -175,58 +184,48 @@ static inline void enable_port_clock(rtos_I2C_port_t port)
 			break;
 	}
 }
+
 static inline I2C_Type * get_I2C_base(rtos_I2C_channel_t I2C_channel)
 {
 	I2C_Type *retval = I2C0;
 	switch (I2C_channel)
 	{
-		case rtos_I2C_0:
+		case rtos_I2C0:
 			retval = I2C0;
 			break;
-		case rtos_I2C_1:
+		case rtos_I2C1:
 			retval = I2C1;
 			break;
-		case rtos_I2C_2:
+		case rtos_I2C2:
 			retval = I2C2;
 			break;
-		case rtos_I2C_3:
+		case rtos_I2C3:
 			retval = I2C3;
 			break;
 	}
 	return retval;
 }
+
 static inline PORT_Type* get_port_base(rtos_I2C_port_t port)
 {
 	PORT_Type *port_base = PORTA;
-		switch (port)
-		{
-			case rtos_i2c_portA:
-				port_base = PORTA;
-				break;
-			case rtos_i2c_portB:
-				port_base = PORTB;
-				break;
-			case rtos_i2c_portC:
-				port_base = PORTC;
-				break;
-			case rtos_i2c_portD:
-				port_base = PORTD;
-				break;
-			case rtos_i2c_portE:
-				port_base = PORTE;
-				break;
-		}
-		return port_base;
+	switch (port)
+	{
+		case rtos_i2c_portA:
+			port_base = PORTA;
+			break;
+		case rtos_i2c_portB:
+			port_base = PORTB;
+			break;
+		case rtos_i2c_portC:
+			port_base = PORTC;
+			break;
+		case rtos_i2c_portD:
+			port_base = PORTD;
+			break;
+		case rtos_i2c_portE:
+			port_base = PORTE;
+			break;
+	}
+	return port_base;
 }
-
-
-
-
-
-
-
-
-
-
-
-
