@@ -133,7 +133,91 @@ rtos_I2C_flag_t rtos_I2C_write_byte(rtos_I2C_channel_t I2C_number, uint8_t *buff
 	}
 	return flag;
 }
+uint8_t I2C_read_byte(rtos_I2C_channel_t I2C_number, uint8_t *buffer,uint16_t lenght, uint8_t slaveAddress) {
+	//rtos_I2C_flag_t flag = rtos_I2C_fail;
+	uint8_t read_byte = 0;
+	i2c_master_transfer_t xfer;
+	if (I2C_handles[I2C_number].is_init) {
+		xfer.data = buffer;
+		xfer.dataSize = lenght;
 
+		xfer.direction = kI2C_Read;
+		xfer.slaveAddress = slaveAddress;
+
+		xSemaphoreTake(I2C_handles[I2C_number].mutex_I2C, portMAX_DELAY);
+		I2C_MasterTransferNonBlocking(get_I2C_base(I2C_number),
+				&I2C_handles[I2C_number].fsl_I2C_handle, &xfer);
+		xSemaphoreTake(I2C_handles[I2C_number].I2C_sem, portMAX_DELAY);
+		xSemaphoreGive(I2C_handles[I2C_number].mutex_I2C);
+		//flag = rtos_I2C_sucess;
+		read_byte = *buffer;
+	}
+	return (read_byte);
+}
+static inline void enable_port_clock(rtos_I2C_port_t port)
+{
+	switch (port)
+	{
+		case rtos_i2c_portA:
+			CLOCK_EnableClock(kCLOCK_PortA);
+			break;
+		case rtos_i2c_portB:
+			CLOCK_EnableClock(kCLOCK_PortB);
+			break;
+		case rtos_i2c_portC:
+			CLOCK_EnableClock(kCLOCK_PortC);
+			break;
+		case rtos_i2c_portD:
+			CLOCK_EnableClock(kCLOCK_PortD);
+			break;
+		case rtos_i2c_portE:
+			CLOCK_EnableClock(kCLOCK_PortE);
+			break;
+	}
+}
+static inline I2C_Type * get_I2C_base(rtos_I2C_channel_t I2C_channel)
+{
+	I2C_Type *retval = I2C0;
+	switch (I2C_channel)
+	{
+		case rtos_I2C_0:
+			retval = I2C0;
+			break;
+		case rtos_I2C_1:
+			retval = I2C1;
+			break;
+		case rtos_I2C_2:
+			retval = I2C2;
+			break;
+		case rtos_I2C_3:
+			retval = I2C3;
+			break;
+	}
+	return retval;
+}
+static inline PORT_Type* get_port_base(rtos_I2C_port_t port)
+{
+	PORT_Type *port_base = PORTA;
+		switch (port)
+		{
+			case rtos_i2c_portA:
+				port_base = PORTA;
+				break;
+			case rtos_i2c_portB:
+				port_base = PORTB;
+				break;
+			case rtos_i2c_portC:
+				port_base = PORTC;
+				break;
+			case rtos_i2c_portD:
+				port_base = PORTD;
+				break;
+			case rtos_i2c_portE:
+				port_base = PORTE;
+				break;
+		}
+		return port_base;
+}
 
 
 
