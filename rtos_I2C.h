@@ -17,11 +17,11 @@ typedef enum {
 	rtos_i2c_portD, rtos_i2c_portE
 } rtos_I2C_port_t;
 
-typedef enum {I2C_0,  I2C_1,  I2C_2,  I2C_3} rtos_I2C_channel_t;
-typedef enum {Slave_mode,       Master_mode} master_or_slave_mode_t;
-typedef enum {I2C_RX_mode,      I2C_TX_mode} transmit_mode_t;
-typedef enum {Acknowledge,     Nacknowledge} ack_or_nack_t;
-typedef enum {rtos_I2C_sucess,rtos_I2C_fail} rtos_I2C_flag_t;
+typedef enum {rtos_I2C_0,rtos_I2C_1,rtos_I2C_2,rtos_I2C_3} rtos_I2C_channel_t;
+typedef enum {rtos_Slave_mode,           rtos_Master_mode} master_or_slave_mode_t;
+typedef enum {rtos_I2C_RX_mode,          rtos_I2C_TX_mode} transmit_mode_t;
+typedef enum {rtos_Acknowledge,         rtos_Nacknowledge} ack_or_nack_t;
+typedef enum {rtos_I2C_sucess,               rtos_I2C_fail} rtos_I2C_flag_t;
 
 typedef struct
 {
